@@ -13,6 +13,14 @@ My setup uses four branches of repositories for the process:
 - ~/Workspace/qa-merge  
     A fuzz build of Bitcoin Core configured to use __all__ any sanitizers. Used to create submissions to the upstream qa-assets repository.
 
+    ```
+    cmake -B build_fuzz \
+       -DCMAKE_C_COMPILER="clang" \
+       -DCMAKE_CXX_COMPILER="clang++" \
+       -DBUILD_FOR_FUZZING=ON \
+       -DSANITIZERS=undefined,address,fuzzer,float-divide-by-zero,integer
+    ```
+
 ## Nightly fuzzing
 
 The `fuzz_nightly.sh` script randomly picks ten fuzz_targets and fuzzes each with 28 threads for an hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
