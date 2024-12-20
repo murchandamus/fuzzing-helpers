@@ -4,16 +4,18 @@
 
 My setup uses four branches of repositories for the process:
 
-- ~/Workspace/qa-assets
+- ~/Workspace/qa-assets  
     A branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. It is used to hold the latest state of the upstream repository and to create submission to the upstream repository. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
-- ~/Workspace/qa-assets-active-fuzzing
+- ~/Workspace/qa-assets-active-fuzzing  
     A second branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. The inputs generated from nightly fuzzing are stored in this directory. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
-- ~/Workspace/fuzz
+- ~/Workspace/qa-fuzz  
     A fuzz build of Bitcoin Core configured to __not__ use any sanitizers. Updated automatically every night to the latest konwn commit of the bitcoin/bitcoin master branch.
-- ~/Workspace/qa-merge
+- ~/Workspace/qa-merge  
     A fuzz build of Bitcoin Core configured to use __all__ any sanitizers. Used to create submissions to the upstream qa-assets repository.
 
 ## Nightly fuzzing
+
+The `fuzz_nightly.sh` script randomly picks ten fuzz_targets and fuzzes each with 28 threads for an hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
 
 I run a cronjob at 9 PM every night that starts an instance of the `fuzz_nightly.sh` script, and a cronjob that starts an instance of the `fuzz_nightly.sh` script at 9 AM on Saturday and Sunday:
 
@@ -24,6 +26,17 @@ I run a cronjob at 9 PM every night that starts an instance of the `fuzz_night
 
 The "DISPLAY" part was necessary for making the notifications in the script show up on the screen.
 
+## Fuzzing a specific target
+
+To generate fuzzing inputs for a specific target, I use the `fuzz_given.sh` script. It takes a single string argument that it uses to grep among the directories in `qa-assets-active-fuzzing/fuzz_corpora`. It will fuzz each hit for one hour with 16 threads.
+
+Calling
+
+```
+~/.local/bin/fuzz_given.sh fees
+```
+
+would for example fuzz the two targets `fees` and `wallet_fees`.
 
 ## Upstreaming the results (about every two months)
 
