@@ -23,7 +23,7 @@ My setup uses four branches of repositories for the process:
 
 ## Nightly fuzzing
 
-The `fuzz_nightly.sh` script randomly picks ten fuzz_targets and fuzzes each with 28 threads for an hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
+The `fuzz_nightly.sh` script randomly picks ten fuzz targets and fuzzes each with 28 threads for an hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
 
 I run a cronjob at 9 PM every night that starts an instance of the `fuzz_nightly.sh` script, and a cronjob that starts an instance of the `fuzz_nightly.sh` script at 9 AM on Saturday and Sunday:
 
@@ -44,7 +44,13 @@ Calling
 ~/.local/bin/fuzz_given.sh fees
 ```
 
-would for example fuzz the two targets `fees` and `wallet_fees`.
+would for example fuzz the two targets `fees` and `wallet_fees`. You can fuzz exactly one target by passing the `-w` parameter along the search term, i.e., calling
+
+```
+~/.local/bin/fuzz_given.sh "-w fees"
+```
+
+will only match on the `fees` target.
 
 ## Upstreaming the results (about every two months)
 
