@@ -5,13 +5,13 @@
 My setup uses four branches of repositories for the process:
 
 - ~/Workspace/qa-assets  
-    A branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. It is used to hold the latest state of the upstream repository and to create submission to the upstream repository. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
+    A branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. It is used to hold the latest state of the upstream repository and to create submissions to the upstream repository. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
 - ~/Workspace/qa-assets-active-fuzzing  
     A second branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. The inputs generated from nightly fuzzing are stored in this directory. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
 - ~/Workspace/qa-fuzz  
-    A fuzz build of Bitcoin Core configured to __not__ use any sanitizers. Updated automatically every night to the latest konwn commit of the bitcoin/bitcoin master branch.
-- ~/Workspace/qa-merge  
-    A fuzz build of Bitcoin Core configured to use __all__ any sanitizers. Used to create submissions to the upstream qa-assets repository.
+    A fuzz build of Bitcoin Core configured to __not__ use any sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch.
+- ~/Workspace/qa-fuzz-sanitized  
+    A fuzz build of Bitcoin Core configured to use __all__ any sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch. Used to ensure that all new input additions found by other threads are also tested against sanitizers.
 
     ```
     cmake -B build_fuzz \
@@ -56,20 +56,20 @@ will only match on the `fees` target.
 
 1. Pull the latest Bitcoin Core
 ```
-cd ~/Workspace/qa-merge
+cd ~/Workspace/qa-fuzz
 git pull upstream master
 git reset --hard upstream/master
 ```
 
-2. Build the merge setup
+2. Build the merge setup with the latest version
 ```
-cd ~/Workspace/qa-merge
+cd ~/Workspace/qa-fuzz
 cmake --build build_fuzz -j 20
 ```
 
 3. Enable suppressions
 ```
-cd ~/Workspace/qa-merge
+cd ~/Workspace/qa-fuzz
 export UBSAN_OPTIONS=suppressions=test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1
 ```
 
@@ -81,27 +81,35 @@ git reset --hard upstream/main
 git checkout -b "202y-mm-murch-inputs"
 ```
 
-5. Move aside the upstream fuzz inputs to make room for a new corpora
+5. Move aside the upstream fuzz inputs to make room for new corpora
 ```
 cd ~/Workspace/qa-assets
 mv fuzz_corpora upstream_corpora
+mkdir fuzz_corpora
 ```
 
-6. Declutter the active fuzzing directory by moving current input collection aside and deleting the one from two months prior
+6. Declutter the active fuzzing directory by moving the candidates for the submission aside and deleting the candidates from two months prior
 ```
 cd ~/Workspace/qa-assets-active-fuzzing
-rm -r old_corpora
-mv fuzz_corpora old_corpora
+rm -r candidate_corpora
+mv fuzz_corpora candidate_corpora
 git reset --hard upstream/main
 ```
 
+Retaining the state of the candidate fuzz corpora at the merge time allows us to rebuild another submission from the same data in case we aim for comparability.
+
 7. Create fresh corpora for all fuzz targets by merging the upstream corpora, active fuzzing corpora, and old corpora into new corpora
 ```
-cd ~/Workspace/qa-merge
-build_fuzz/test/fuzz/test_runner.py -l DEBUG --par 3 --m_dir ../qa-assets-active-fuzzing/fuzz_corpora/ --m_dir ../qa-assets-active-fuzzing/old_corpora --m_dir ../qa-assets/upstream_corpora/ ../qa-assets/fuzz_corpora/
+cd ~/Workspace/qa-fuzz
+build_fuzz/test/fuzz/test_runner.py -l DEBUG --par 3 --m_dir ../qa-assets-active-fuzzing/candidate_corpora --m_dir ../qa-assets/upstream_corpora/ ../qa-assets/fuzz_corpora/
 ```
 
-Note: Depending on what state `../qa-assets-active-fuzzing/fuzz_corpora` and `../qa-assets/upstream_corpora` have at the time of the merge, the two might be an exact duplicate or one may be a subset of the other.
+Note: For repeatability, `../qa-assets-active-fuzzing/fuzz_corpora` is not included, as it will start being populated per the subsequent nightly fuzzing. This also makes it clear which inputs were already considered for submission. Either way, right after setting aside `../qa-assets-active-fuzzing/candidate_corpora` and resetting `../qa-assets-active-fuzzing/fuzz_corpora`, the latter should be an exact duplicate of `../qa-assets/upstream_corpora`. After nightly fuzzing has occurred, `../qa-assets/upstream_corpora` will be a subset of `../qa-assets-active-fuzzing/fuzz_corpora`. If repeatability is not necessary or we don’t care that inputs may be considered for submission twice, the submission can instead be crafted by adding the latest inputs:
+
+```
+cd ~/Workspace/qa-fuzz
+build_fuzz/test/fuzz/test_runner.py -l DEBUG --par 3 --m_dir ../qa-assets-active-fuzzing/candidate_corpora --m_dir ../qa-assets-active-fuzzing/fuzz_corpora/ ../qa-assets/fuzz_corpora/
+```
 
 8. After the merge is finished, restore the upstream inputs
 ```
