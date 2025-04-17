@@ -26,14 +26,46 @@ My setup uses four branches of repositories for the process:
 
 The `fuzz_nightly.sh` script randomly picks ten fuzz targets and fuzzes each with 28 threads for an hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
 
-I run a cronjob at 9 PM every night that starts an instance of the `fuzz_nightly.sh` script, and a cronjob that starts an instance of the `fuzz_nightly.sh` script at 9 AM on Saturday and Sunday:
+I run a systemd timer that starts an instance of the `fuzz_nightly.sh` script at 9PM every day, and 9AM on days I don’t come to the office:
 
+`~/.config/systemd/user/nightly-fuzzing.service`:
 ```
-0 21 * * * export DISPLAY=:0.0 && /bin/zsh /home/murch/.local/bin/fuzz_nightly.sh > ~/.cron.log 2>&1
-0 9 * * 6,7 export DISPLAY=:0.0 && /bin/zsh /home/murch/.local/bin/fuzz_nightly.sh > ~/.cron.log 2>&1
+[Unit]
+Description="Script that fuzzes ten targets on 28 threads to produce inputs for QA-Assets"
+
+[Service]
+ExecStart=~/.local/bin/fuzz_nightly.sh
 ```
 
-The "DISPLAY" part was necessary for making the notifications in the script show up on the screen.
+`~/.config/systemd/user/nightly-fuzzing.timer`:
+```
+[Unit]
+Description="Run nightly-fuzzing.service at 9PM every day and at 9AM FRI-MON"
+
+[Timer]
+OnCalendar=Mon..Sun *-*-* 21:00:*
+OnCalendar=Mon *-*-* 9:00:*
+OnCalendar=Fri..Sun *-*-* 9:00:*
+Unit=nightly-fuzzing.service
+
+[Install]
+WantedBy=multi-user.target
+```
+
+This command returns an error message if there is a problem with the service definition, but returns nothing if it is correct:
+```
+systemd-analyze verify nightly-fuzzing.*
+```
+
+You can test that the service runs the script by calling
+```
+systemctl --user start nightly-fuzzing.service
+```
+
+You can enable the service to run automatically with
+```
+systemctl --user enable nightly-fuzzing.timer
+```
 
 ## Fuzzing a specific target
 
