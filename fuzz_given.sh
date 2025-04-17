@@ -20,18 +20,18 @@ for i in $(find ../qa-assets-active-fuzzing/fuzz_corpora/ -mindepth 1 -maxdepth 
     do notify-send -u critical 'Fuzzing '+$i && \
     cd $HOME/Workspace/qa-fuzz && \
     # Run a few threads without sanitizers to run at limited length to foster reduced length seeds
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=32 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=128 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -reload=1 -max_total_time=3600 -max_len=128 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=512 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -reload=1 -max_total_time=3600 -max_len=512 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=2048 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -reload=1 -max_total_time=3600 -max_len=2048 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=32 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=128 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -reload=1 -max_total_time=3600 -max_len=128 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=512 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -reload=1 -max_total_time=3600 -max_len=512 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 -max_len=2048 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -reload=1 -max_total_time=3600 -max_len=2048 $i & \
     # Run most threads without sanitizers
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=6 -reload=1 -max_total_time=3600 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=6 -reload=1 -max_total_time=3600 $i & \
     # Run a thread each with and without use_value_profile and all sanitizers enabled
     cd $HOME/Workspace/qa-fuzz-sanitized && \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 $i & \
-    FUZZ=$(basename $i) build_fuzz/src/test/fuzz/fuzz -fork=1 -reload=1 -max_total_time=3600 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -use_value_profile=1 -reload=1 -max_total_time=3600 $i & \
+    FUZZ=$(basename $i) build_fuzz/bin/fuzz -fork=1 -reload=1 -max_total_time=3600 $i & \
     wait; done; notify-send -u critical 'FINISHED FUZZING ' +$i + ' for 16×1h'

@@ -9,16 +9,17 @@ My setup uses four branches of repositories for the process:
 - ~/Workspace/qa-assets-active-fuzzing  
     A second branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. The inputs generated from nightly fuzzing are stored in this directory. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
 - ~/Workspace/qa-fuzz  
-    A fuzz build of Bitcoin Core configured to __not__ use any sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch.
-- ~/Workspace/qa-fuzz-sanitized  
-    A fuzz build of Bitcoin Core configured to use __all__ any sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch. Used to ensure that all new input additions found by other threads are also tested against sanitizers.
+    A fuzz build of Bitcoin Core configured to __not__ use any sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch. You can configure it by using:
 
     ```
-    cmake -B build_fuzz \
-       -DCMAKE_C_COMPILER="clang" \
-       -DCMAKE_CXX_COMPILER="clang++" \
-       -DBUILD_FOR_FUZZING=ON \
-       -DSANITIZERS=undefined,address,fuzzer,float-divide-by-zero,integer
+    cmake --preset=libfuzzer-nosan
+    ```
+
+- ~/Workspace/qa-fuzz-sanitized  
+    A fuzz build of Bitcoin Core configured to use __all__ sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch. Used to ensure that all new input additions found by other threads are also tested against sanitizers.
+
+    ```
+    cmake --preset=libfuzzer
     ```
 
 ## Nightly fuzzing
@@ -44,13 +45,13 @@ Calling
 ~/.local/bin/fuzz_given.sh fees
 ```
 
-would for example fuzz the two targets `fees` and `wallet_fees`. You can fuzz exactly one target by passing the `-w` parameter along the search term, i.e., calling
+would for example fuzz the two targets `fees` and `wallet_fees`. You can fuzz exactly one target by passing the `-w` parameter along with the search term to match on the exact string, i.e., calling
 
 ```
 ~/.local/bin/fuzz_given.sh "-w fees"
 ```
 
-will only match on the `fees` target.
+will only match on the `fees` target due to matching the whole word.
 
 ## Upstreaming the results (about every two months)
 
