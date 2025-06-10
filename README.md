@@ -2,31 +2,25 @@
 
 ## Setup
 
-My setup uses four branches of repositories for the process:
+My setup uses three branches of repositories for the process:
 
 - ~/Workspace/qa-assets  
-    A branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. It is used to hold the latest state of the upstream repository and to create submissions to the upstream repository. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
+    A worktree of the https://github.com/bitcoin-core/qa-assets repository on GitHub. It is used to hold the latest state of the upstream repository and to create submissions to the upstream repository. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
 - ~/Workspace/qa-assets-active-fuzzing  
-    A second branch of the https://github.com/bitcoin-core/qa-assets repository on GitHub. The inputs generated from nightly fuzzing are stored in this directory. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
+    A second worktree of the https://github.com/bitcoin-core/qa-assets repository on GitHub. The inputs generated from nightly fuzzing are stored in this directory. There is a fuzz corpus for each fuzz target in the `fuzz_corpora` directory.
 - ~/Workspace/qa-fuzz  
-    A fuzz build of Bitcoin Core configured to __not__ use any sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch. You can configure it by using:
-
-    ```
-    cmake --preset=libfuzzer-nosan
-    ```
-
-- ~/Workspace/qa-fuzz-sanitized  
-    A fuzz build of Bitcoin Core configured to use __all__ sanitizers. Updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch. Used to ensure that all new input additions found by other threads are also tested against sanitizers.
+    A worktree of Bitcoin Core that is updated automatically every night to the latest known commit of the bitcoin/bitcoin master branch and used to compile Bitcoin Core for fuzzing. It is configured for two builds, one with all sanitizers enabled, and one with all sanitizers disabled:
 
     ```
     cmake --preset=libfuzzer
+    cmake --preset=libfuzzer-nosan
     ```
 
 ## Nightly fuzzing
 
 The `fuzz_nightly.sh` script randomly picks ten fuzz targets and fuzzes each with 28 threads for an hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
 
-I run a systemd timer that starts an instance of the `fuzz_nightly.sh` script at 9PM every day, and 9AM on days I don’t come to the office:
+I run a systemd timer that starts an instance of the `fuzz_nightly.sh` script at 9PM every day, and additionally at 9AM on days I am not at the office:
 
 `~/.config/systemd/user/nightly-fuzzing.service`:
 ```
@@ -94,10 +88,10 @@ git pull upstream master
 git reset --hard upstream/master
 ```
 
-2. Build the merge setup with the latest version
+2. Build the merge setup (without sanitizers) with the latest version
 ```
 cd ~/Workspace/qa-fuzz
-cmake --build build_fuzz -j 20
+cmake --build build_fuzz_nosan -j 20
 ```
 
 3. Enable suppressions
@@ -141,7 +135,7 @@ Note: For repeatability, `../qa-assets-active-fuzzing/fuzz_corpora` is not inclu
 
 ```
 cd ~/Workspace/qa-fuzz
-build_fuzz/test/fuzz/test_runner.py -l DEBUG --par 3 --m_dir ../qa-assets-active-fuzzing/candidate_corpora --m_dir ../qa-assets-active-fuzzing/fuzz_corpora/ ../qa-assets/fuzz_corpora/
+build_fuzz_nosan/test/fuzz/test_runner.py -l DEBUG --par 3 --m_dir ../qa-assets-active-fuzzing/candidate_corpora --m_dir ../qa-assets-active-fuzzing/fuzz_corpora/ ../qa-assets/fuzz_corpora/
 ```
 
 8. After the merge is finished, restore the upstream inputs
