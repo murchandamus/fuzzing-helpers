@@ -128,7 +128,7 @@ Retaining the state of the candidate fuzz corpora at the merge time allows us to
 7. Create fresh corpora for all fuzz targets by merging the upstream corpora, active fuzzing corpora, and old corpora into new corpora
 ```
 cd ~/Workspace/qa-fuzz
-build_fuzz/test/fuzz/test_runner.py -l DEBUG --par 3 --m_dir ../qa-assets-active-fuzzing/candidate_corpora --m_dir ../qa-assets/upstream_corpora/ ../qa-assets/fuzz_corpora/
+build_fuzz_nosan/test/fuzz/test_runner.py -l DEBUG --par 3 --m_dir ../qa-assets-active-fuzzing/candidate_corpora --m_dir ../qa-assets/upstream_corpora/ ../qa-assets/fuzz_corpora/
 ```
 
 Note: For repeatability, `../qa-assets-active-fuzzing/fuzz_corpora` is not included, as it will start being populated per the subsequent nightly fuzzing. This also makes it clear which inputs were already considered for submission. Either way, right after setting aside `../qa-assets-active-fuzzing/candidate_corpora` and resetting `../qa-assets-active-fuzzing/fuzz_corpora`, the latter should be an exact duplicate of `../qa-assets/upstream_corpora`. After nightly fuzzing has occurred, `../qa-assets/upstream_corpora` will be a subset of `../qa-assets-active-fuzzing/fuzz_corpora`. If repeatability is not necessary or we don’t care that inputs may be considered for submission twice, the submission can instead be crafted by adding the latest inputs:
