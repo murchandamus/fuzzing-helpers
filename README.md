@@ -18,7 +18,7 @@ My setup uses three branches of repositories for the process:
 
 ## Nightly fuzzing
 
-The `fuzz_nightly.sh` script randomly picks ten fuzz targets and fuzzes each with 28 threads for an hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
+The `fuzz_nightly.sh` script resets the `qa-fuzz` directory to the latest commit of the `master` branch of `bitcoin/bitcoin`, then randomly picks ten fuzz targets and fuzzes each with 28 threads for one hour. The script mixes in a few threads that turn on `use_value_profile`, use sanitizers, and restrict the length of inputs, but most threads are unrestricted in all of these regards.
 
 I run a systemd timer that starts an instance of the `fuzz_nightly.sh` script at 9PM every day, and additionally at 9AM on days I am not at the office:
 

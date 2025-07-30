@@ -10,7 +10,8 @@ notify-send -u critical 'Starting fuzz job' && \
 export UBSAN_OPTIONS=suppressions=test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1
 cd $HOME/Workspace/qa-fuzz && \
 # Update and compile fuzz binary with sanitizers disabled
-git reset --hard upstream/master && \
+git fetch web master && \
+git reset --hard web/master && \
 cmake --preset=libfuzzer-nosan && \
 cmake --build build_fuzz_nosan -j "$(($(nproc)+1))" && \
 # Update and compile fuzz binary with all sanitizers enabled
